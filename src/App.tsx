@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Navbar } from './components/layout/Navbar'
 import { Footer } from './components/layout/Footer'
+import { FloatingActions } from './components/ui/FloatingActions'
 import { Hero } from './sections/Hero'
 import { Problem } from './sections/Problem'
 import { Solution } from './sections/Solution'
@@ -46,6 +47,7 @@ function App() {
           <Route path="/paiment" element={<PaymentPage />} />
           <Route path="/signup" element={<SignUpPage />} />
         </Routes>
+        <FloatingActions />
       </div>
     </Router>
   )
