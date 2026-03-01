@@ -29,10 +29,9 @@ export function Footer() {
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-12 mb-20">
                     <div className="col-span-2 lg:col-span-1">
                         <div className="flex items-center gap-2 mb-6">
-                            <div className="w-6 h-6 bg-foreground rounded flex items-center justify-center">
-                                <div className="w-3 h-3 bg-background rounded-sm" />
-                            </div>
-                            <span className="text-lg font-black tracking-tighter text-foreground">Flowly</span>
+                            <img src="/ICONBLACK.svg?v=3" alt="Flowly" className="h-6 w-auto block dark:hidden" />
+                            <img src="/ICONWHITE.svg?v=3" alt="Flowly" className="h-6 w-auto hidden dark:block" />
+                            <span className="text-xl font-black tracking-tighter text-foreground ml-1">Flowly</span>
                         </div>
                         <p className="text-sm text-zinc-500 max-w-xs mb-6">
                             Enterprise-grade AI-powered workflow automation platform for modern business management.

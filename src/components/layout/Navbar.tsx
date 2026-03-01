@@ -19,10 +19,10 @@ export function Navbar() {
     }, [])
 
     const navLinks = [
-        { name: "Product", href: "#solution" },
-        { name: "Features", href: "#features" },
-        { name: "Automation", href: "#automation" },
-        { name: "Architecture", href: "#architecture" },
+        { name: "Why Flowly?", href: "#problem" },
+        { name: "Platform", href: "#solution" },
+        { name: "Technology", href: "#technology" },
+        { name: "Pricing", href: "#pricing" },
     ]
 
     return (
@@ -58,7 +58,7 @@ export function Navbar() {
                         <Link to="/login">Login</Link>
                     </Button>
                     <Button size="sm" asChild>
-                        <Link to="/signup">Get Started</Link>
+                        <a href="#pricing">Get Started</a>
                     </Button>
                 </div>
 
@@ -99,7 +99,7 @@ export function Navbar() {
                                 <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Login</Link>
                             </Button>
                             <Button className="w-full" asChild>
-                                <Link to="/signup" onClick={() => setMobileMenuOpen(false)}>Get Started</Link>
+                                <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Get Started</a>
                             </Button>
                         </div>
                     </motion.div>

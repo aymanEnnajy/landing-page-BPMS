@@ -6,7 +6,7 @@ import {
     Users, Building2, LayoutDashboard, Briefcase,
     BarChart3, Settings, CreditCard, Sparkles,
     UserCheck, Calendar, FileText, Wallet,
-    CheckCircle2, TrendingUp
+    CheckCircle2, TrendingUp, Bot
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 
@@ -125,44 +125,77 @@ const HRDashboard = () => (
             </div>
         </div>
         <div className="flex-1 p-4 md:p-8 overflow-y-auto no-scrollbar">
-            <h2 className="text-xl md:text-2xl font-bold tracking-tight mb-8">HR Management</h2>
+            <div className="flex items-center justify-between mb-8">
+                <h2 className="text-xl md:text-2xl font-bold tracking-tight">HR Management</h2>
+            </div>
+
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
-                <KPICard title="On Leave Today" value="8" icon={Calendar} />
-                <KPICard title="Pending Docs" value="24" icon={FileText} />
+                <KPICard title="Employee Attendance" value="92%" trend="Present" icon={Users} />
+                <KPICard title="Pending Leaves" value="12" trend="Action Req." icon={Calendar} />
                 <div className="hidden lg:block">
-                    <KPICard title="Payroll Status" value="Processing" icon={Wallet} />
+                    <KPICard title="Open Roles" value="8" trend="Hiring" icon={Briefcase} />
                 </div>
             </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="p-4 md:p-6 rounded-2xl bg-secondary/20 border border-accent glass max-h-[250px] overflow-hidden">
-                    <h3 className="font-bold mb-4">Leave Calendar</h3>
-                    <div className="grid grid-cols-7 gap-1 md:gap-2">
-                        {Array.from({ length: 28 }).map((_, i) => (
-                            <div key={i} className={cn(
-                                "h-8 md:h-10 rounded-lg flex items-center justify-center text-[10px] md:text-xs",
-                                i === 12 ? "bg-primary text-primary-foreground font-bold" : "bg-secondary text-muted"
-                            )}>{i + 1}</div>
-                        ))}
-                    </div>
-                </div>
+                {/* Recruitment Pipeline */}
                 <div className="p-4 md:p-6 rounded-2xl bg-secondary/20 border border-accent glass">
-                    <h3 className="font-bold mb-4">Validation Queue</h3>
-                    {[1, 2, 3].map(item => (
-                        <div key={item} className="flex items-center justify-between p-3 border-b border-accent last:border-0">
+                    <h3 className="font-bold mb-4">Recruitment Pipeline</h3>
+                    {[
+                        { name: "Emma Thompson", role: "Senior Engineer", status: "Interview" },
+                        { name: "Ahmed Hassan", role: "Product Manager", status: "Offer" },
+                        { name: "Clara Davis", role: "UX Designer", status: "Applied" },
+                    ].map((candidate, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 border-b border-accent last:border-0 hover:bg-secondary/30 transition-colors">
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-secondary shrink-0" />
                                 <div className="text-sm">
-                                    <div className="font-medium line-clamp-1">Sarah Connor</div>
-                                    <div className="text-[10px] md:text-xs text-muted line-clamp-1">Vacation Request</div>
+                                    <div className="font-medium line-clamp-1">{candidate.name}</div>
+                                    <div className="text-[10px] md:text-xs text-muted line-clamp-1">{candidate.role}</div>
                                 </div>
                             </div>
-                            <div className="flex gap-2 shrink-0">
-                                <div className="w-6 h-6 rounded bg-emerald-500/20 flex items-center justify-center">
-                                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                                </div>
-                            </div>
+                            <span className={cn(
+                                "text-[8px] md:text-[10px] uppercase tracking-widest font-bold px-2 py-1 rounded shrink-0",
+                                candidate.status === "Offer" ? "bg-emerald-500/20 text-emerald-500" :
+                                    candidate.status === "Interview" ? "bg-blue-500/20 text-blue-500" :
+                                        "bg-primary/10 text-primary"
+                            )}>{candidate.status}</span>
                         </div>
                     ))}
+                </div>
+
+                {/* AI Workflow Assistant */}
+                <div className="p-4 md:p-6 rounded-2xl bg-secondary/20 border border-accent glass">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-bold">AI Workflow Engine</h3>
+                        <div className="w-6 h-6 rounded bg-primary/20 flex items-center justify-center">
+                            <Sparkles className="w-3 h-3 text-primary" />
+                        </div>
+                    </div>
+                    <div className="space-y-3">
+                        <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 text-sm text-foreground italic flex gap-2">
+                            <Bot className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                            <span>"I've processed 3 new document requests and routed 2 leave approvals to management."</span>
+                        </div>
+                        {[
+                            { title: "Visa Renewal Form", user: "Michael C.", type: "Document" },
+                            { title: "Annual Leave", user: "Sarah K.", type: "Leave Request" }
+                        ].map((item, i) => (
+                            <div key={i} className="flex items-center justify-between p-3 border border-accent rounded-lg bg-background/50 hover:border-primary/50 transition-colors">
+                                <div className="flex items-center gap-3">
+                                    <div className="text-sm">
+                                        <div className="font-medium line-clamp-1">{item.title}</div>
+                                        <div className="text-[10px] md:text-xs text-primary line-clamp-1">{item.user} • {item.type}</div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2 shrink-0">
+                                    <div className="w-6 h-6 rounded bg-emerald-500/20 flex items-center justify-center">
+                                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>
@@ -234,13 +267,13 @@ export function DashboardPreview() {
             const st = ScrollTrigger.create({
                 trigger: sectionRef.current,
                 start: "top top",
-                end: "+=300%",
+                end: "+=150%", // Much shorter pinning distance
                 pin: true,
-                scrub: 1,
+                scrub: 0.1,   // Almost instant catch-up, no more sluggish "long time"
                 snap: {
                     snapTo: 1 / (dashboards.length - 1),
-                    duration: { min: 0.2, max: 0.8 },
-                    delay: 0.1,
+                    duration: 0.3, // Fast snap
+                    delay: 0,      // Snap immediately upon scroll stop
                     ease: "power2.inOut"
                 },
                 onUpdate: (self) => {
@@ -255,8 +288,8 @@ export function DashboardPreview() {
                 scrollTrigger: {
                     trigger: sectionRef.current,
                     start: "top top",
-                    end: "+=300%",
-                    scrub: 1,
+                    end: "+=150%",
+                    scrub: 0.1,
                 }
             });
 
@@ -264,34 +297,33 @@ export function DashboardPreview() {
                 const isFirst = i === 0;
                 const isLast = i === dashboards.length - 1;
 
-                // Horizontal Slide Transition: slides in from LEFT
+                // Subtle and extremely fast scale/fade instead of huge swiping
                 if (!isFirst) {
                     mainTl.fromTo(card, {
-                        xPercent: -120, // Start from left
+                        scale: 0.95,
                         opacity: 0,
                     }, {
-                        xPercent: 0,
+                        scale: 1,
                         opacity: 1,
-                        duration: 1,
+                        duration: 0.15, // Blazing fast transition
                         ease: "power2.out"
-                    }, i - 0.5);
+                    }, i - 0.15); // Trigger very close to the index
                 }
 
-                // Horizontal Slide Transition: slides out to RIGHT
                 if (!isLast) {
                     mainTl.to(card, {
-                        xPercent: 120, // Slide out to right
+                        scale: 1.05,
                         opacity: 0,
-                        duration: 1,
+                        duration: 0.15,
                         ease: "power2.in"
-                    }, i + 0.5);
+                    }, i + 0.85); // Wait almost the full integer before transitioning out
                 }
 
                 mainTl.to(indicators[i], {
                     color: "var(--foreground)",
                     opacity: 1,
                     duration: 0.1
-                }, i > 0 ? i - 0.2 : 0);
+                }, i > 0 ? i - 0.15 : 0);
 
                 if (i > 0) {
                     mainTl.to(indicators[i - 1], {

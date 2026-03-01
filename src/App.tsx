@@ -5,12 +5,7 @@ import { FloatingActions } from './components/ui/FloatingActions'
 import { Hero } from './sections/Hero'
 import { Problem } from './sections/Problem'
 import { Solution } from './sections/Solution'
-import { Features } from './sections/Features'
-import { AIAutomation } from './sections/AIAutomation'
-import { HowItWorks } from './sections/HowItWorks'
-import { UseCases } from './sections/UseCases'
-import { Architecture } from './sections/Architecture'
-import { Trust } from './sections/Trust'
+import { TechnicalProof } from './sections/TechnicalProof'
 import { Pricing } from './sections/Pricing'
 import { CTA } from './sections/CTA'
 import PaymentPage from './pages/PaymentPage'
@@ -25,14 +20,9 @@ function HomePage() {
         <Hero />
         <Problem />
         <Solution />
-        <Features />
-        <AIAutomation />
-        <HowItWorks />
-        <UseCases />
-        <Architecture />
-        <Trust />
-        <Pricing />
+        <TechnicalProof />
         <CTA />
+        <Pricing />
       </main>
       <Footer />
     </>
