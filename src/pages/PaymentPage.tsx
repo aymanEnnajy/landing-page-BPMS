@@ -10,10 +10,9 @@ export default function PaymentPage() {
     const navigate = useNavigate();
 
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-        if (typeof window !== 'undefined') {
-            return (localStorage.getItem('theme') as 'light' | 'dark') || 'dark';
-        }
-        return 'dark';
+        const saved = localStorage.getItem('theme') as 'light' | 'dark';
+        if (saved) return saved;
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     });
 
     const [formData, setFormData] = useState({
@@ -141,7 +140,7 @@ export default function PaymentPage() {
                         transition={{ delay: 0.3 }}
                         className="text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold text-muted-foreground"
                     >
-                        Premium Intelligent BPMS Encryption
+                        Premium Intelligent Flowly Encryption
                     </motion.p>
                 </div>
 
@@ -179,7 +178,7 @@ export default function PaymentPage() {
             </motion.div>
 
             <footer className="absolute bottom-6 text-center opacity-30 text-[10px] uppercase tracking-[0.3em] font-black pointer-events-none">
-                Intelligent BPMS &copy; 2026
+                Intelligent Flowly &copy; 2026
             </footer>
         </div>
     );

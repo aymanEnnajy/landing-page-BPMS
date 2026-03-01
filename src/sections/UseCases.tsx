@@ -44,7 +44,7 @@ export function UseCases() {
                     </Reveal>
                     <Reveal delay={0.2}>
                         <p className="text-muted max-w-2xl">
-                            Whether you're a scaling startup or a global corporation, BPMS adapts to your specific operational needs.
+                            Whether you're a scaling startup or a global corporation, Flowly adapts to your specific operational needs.
                         </p>
                     </Reveal>
                 </div>

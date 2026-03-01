@@ -37,7 +37,7 @@ export function HowItWorks() {
                 <div className="text-left mb-20">
                     <Reveal>
                         <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-foreground mb-6">
-                            Deploy BPMS in <br />
+                            Deploy Flowly in <br />
                             <span className="text-muted">Five Simple Steps.</span>
                         </h2>
                     </Reveal>

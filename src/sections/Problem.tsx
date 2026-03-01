@@ -42,7 +42,7 @@ export function Problem() {
                         <Reveal delay={0.3}>
                             <p className="text-lg text-zinc-500 max-w-md leading-relaxed">
                                 Traditional enterprise management is slow, error-prone, and disconnected.
-                                BPMS eliminates these pain points by injecting AI-powered automation at the core of your operation.
+                                Flowly eliminates these pain points by injecting AI-powered automation at the core of your operation.
                             </p>
                         </Reveal>
                     </div>

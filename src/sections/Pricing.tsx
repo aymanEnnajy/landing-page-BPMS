@@ -15,7 +15,7 @@ export function Pricing() {
             durationMonths: 1,
             price: 700,
             currency: "MAD",
-            description: "Perfect for short-term projects and testing the full power of BPMS.",
+            description: "Perfect for short-term projects and testing the full power of Flowly.",
             features: [
                 "Full AI Process Automation",
                 "Infinite Workflow Nodes",
@@ -89,7 +89,7 @@ export function Pricing() {
                     </Reveal>
                     <Reveal delay={0.2}>
                         <p className="text-lg text-muted max-w-2xl text-left">
-                            Choose the plan that fits your execution speed. All plans include full access to our core BPMS engine.
+                            Choose the plan that fits your execution speed. All plans include full access to our core Flowly engine.
                         </p>
                     </Reveal>
                 </div>

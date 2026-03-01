@@ -22,8 +22,8 @@ export function CTA() {
                     </Reveal>
                     <Reveal delay={0.2} width="100%">
                         <p className="text-xl text-muted mb-12 max-w-2xl mx-auto leading-relaxed">
-                            Join elite enterprises using BPMS to automate at the speed of thought.
-                            Deploy BPMS today and transform your organization with the power of AI-driven automation.
+                            Join elite enterprises using Flowly to automate at the speed of thought.
+                            Deploy Flowly today and transform your organization with the power of AI-driven automation.
                         </p>
                     </Reveal>
                     <Reveal delay={0.4} width="100%">

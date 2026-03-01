@@ -56,7 +56,11 @@ export default function LoginPage() {
 
             <div className="w-full max-w-md z-10 text-center">
                 <Link to="/" className="inline-block mb-10">
-                    <span className="text-2xl font-black tracking-tighter uppercase">BPMS <span className="text-primary italic text-xl">Intelligent</span></span>
+                    <div className="flex items-center gap-2 justify-center">
+                        <img src="/ICONBLACK.svg?v=3" alt="Flowly" className="h-8 w-auto block dark:hidden" />
+                        <img src="/ICONWHITE.svg?v=3" alt="Flowly" className="h-8 w-auto hidden dark:block" />
+                        <span className="text-2xl font-black tracking-tighter uppercase ml-1">Flowly <span className="text-primary italic text-xl">Intelligent</span></span>
+                    </div>
                 </Link>
 
                 <div className="glass rounded-[2rem] border border-foreground/5 bg-background/40 backdrop-blur-3xl p-8 md:p-10 shadow-2xl">
@@ -114,7 +118,7 @@ export default function LoginPage() {
                 </div>
 
                 <p className="mt-8 text-[9px] text-muted-foreground uppercase tracking-[0.3em] font-black">
-                    New to BPMS? <Link to="/signup" className="text-primary hover:underline ml-2">Create Enterprise Account</Link>
+                    New to Flowly? <Link to="/signup" className="text-primary hover:underline ml-2">Create Enterprise Account</Link>
                 </p>
             </div>
         </div>

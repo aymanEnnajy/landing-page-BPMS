@@ -51,7 +51,7 @@ export function WhyChooseUs() {
                     <Reveal>
                         <h2 className="text-4xl md:text-6xl font-bold tracking-tighter text-foreground mb-6">
                             Why Global Leaders <br />
-                            <span className="text-muted">Choose BPMS.</span>
+                            <span className="text-muted">Choose Flowly.</span>
                         </h2>
                     </Reveal>
                     <Reveal delay={0.2}>

@@ -32,10 +32,11 @@ export function Navbar() {
         >
             <Container className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-foreground rounded flex items-center justify-center">
-                        <div className="w-4 h-4 bg-background rounded-sm" />
+                    <div className="flex items-center gap-2">
+                        <img src="/ICONBLACK.svg?v=3" alt="Flowly" className="h-6 w-auto block dark:hidden" />
+                        <img src="/ICONWHITE.svg?v=3" alt="Flowly" className="h-6 w-auto hidden dark:block" />
+                        <span className="text-xl font-black tracking-tighter text-foreground ml-1">Flowly</span>
                     </div>
-                    <span className="text-xl font-black tracking-tighter text-foreground">BPMS</span>
                 </div>
 
                 {/* Desktop Nav */}

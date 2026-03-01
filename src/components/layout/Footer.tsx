@@ -32,7 +32,7 @@ export function Footer() {
                             <div className="w-6 h-6 bg-foreground rounded flex items-center justify-center">
                                 <div className="w-3 h-3 bg-background rounded-sm" />
                             </div>
-                            <span className="text-lg font-black tracking-tighter text-foreground">BPMS</span>
+                            <span className="text-lg font-black tracking-tighter text-foreground">Flowly</span>
                         </div>
                         <p className="text-sm text-zinc-500 max-w-xs mb-6">
                             Enterprise-grade AI-powered workflow automation platform for modern business management.
@@ -60,7 +60,7 @@ export function Footer() {
 
                 <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
                     <p className="text-xs text-zinc-600">
-                        &copy; {currentYear} BPMS SaaS Platform. All rights reserved.
+                        &copy; {currentYear} Flowly SaaS Platform. All rights reserved.
                     </p>
                     <div className="flex items-center gap-6">
                         <span className="text-xs text-zinc-700">PFE 2026 - Engineering Project</span>

@@ -36,7 +36,7 @@ export function AIAutomation() {
                         </Reveal>
                         <Reveal delay={0.3}>
                             <p className="text-lg text-muted mb-10 leading-relaxed">
-                                Our AI engine doesn't just assist; it automates. From intelligent vacation request approvals to automatic document validation, BPMS learns your business logic and applies it with surgical precision.
+                                Our AI engine doesn't just assist; it automates. From intelligent vacation request approvals to automatic document validation, Flowly learns your business logic and applies it with surgical precision.
                             </p>
                         </Reveal>
 

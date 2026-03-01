@@ -222,7 +222,11 @@ export default function SignUpPage() {
                 {/* Header */}
                 <div className="text-center mb-8">
                     <Link to="/" className="inline-block mb-3">
-                        <span className="text-2xl font-black tracking-tighter uppercase">BPMS <span className="text-primary italic text-xl">Intelligent</span></span>
+                        <div className="flex items-center gap-2">
+                            <img src="/ICONBLACK.svg?v=3" alt="Flowly" className="h-8 w-auto block dark:hidden" />
+                            <img src="/ICONWHITE.svg?v=3" alt="Flowly" className="h-8 w-auto hidden dark:block" />
+                            <span className="text-2xl font-black tracking-tighter uppercase ml-1">Flowly <span className="text-primary italic text-xl">Intelligent</span></span>
+                        </div>
                     </Link>
                     <h1 className="text-3xl md:text-5xl font-black tracking-tighter mb-2 leading-none">Enterprise Setup</h1>
                     <p className="text-muted-foreground text-[10px] uppercase tracking-[0.4em] font-bold">Create your platform account</p>

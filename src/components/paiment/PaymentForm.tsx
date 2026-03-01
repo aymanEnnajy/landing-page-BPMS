@@ -170,7 +170,7 @@ export function PaymentForm({ formData, setFormData, setIsFlipped, onSubmit, loa
             </div>
 
             <p className="text-[10px] text-center text-muted-foreground pt-4">
-                Secure checkout powered by BPMS Intelligent Systems. <br />
+                Secure checkout powered by Flowly Intelligent Systems. <br />
                 Encryption level: AES-256.
             </p>
         </div>

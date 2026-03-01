@@ -3,7 +3,11 @@ import { Sun, Moon } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 export function ThemeToggle() {
-    const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark")
+    const [theme, setTheme] = useState(() => {
+        const saved = localStorage.getItem("theme");
+        if (saved) return saved;
+        return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    })
 
     useEffect(() => {
         const root = window.document.documentElement
