@@ -1,5 +1,5 @@
 import { cn } from "../../lib/utils";
-import { CreditCard, User, Calendar, Lock, ArrowRight } from "lucide-react";
+import { CreditCard, User, Calendar, Lock, ArrowRight, Loader2 } from "lucide-react";
 
 interface PaymentFormProps {
     formData: {
@@ -15,6 +15,9 @@ interface PaymentFormProps {
         cvc: string;
     }>>;
     setIsFlipped: (isFlipped: boolean) => void;
+    onSubmit?: () => void;
+    loading?: boolean;
+    error?: string | null;
 }
 
 interface InputWrapperProps {
@@ -56,9 +59,7 @@ const InputWrapper = ({ icon: Icon, label, name, placeholder, value, type = "tex
     </div>
 );
 
-export function PaymentForm({ formData, setFormData, setIsFlipped }: PaymentFormProps) {
-    // const [errors, setErrors] = useState<Record<string, string>>({});
-
+export function PaymentForm({ formData, setFormData, setIsFlipped, onSubmit, loading, error }: PaymentFormProps) {
     const formatCardNumber = (value: string) => {
         const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
         const matches = v.match(/\d{4,16}/g);
@@ -139,6 +140,12 @@ export function PaymentForm({ formData, setFormData, setIsFlipped }: PaymentForm
                 </div>
             </div>
 
+            {error && (
+                <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-[10px] font-bold uppercase tracking-wider text-center">
+                    {error}
+                </div>
+            )}
+
             <div className="flex gap-4 pt-4">
                 <button
                     onClick={() => window.history.back()}
@@ -147,10 +154,18 @@ export function PaymentForm({ formData, setFormData, setIsFlipped }: PaymentForm
                     Cancel
                 </button>
                 <button
-                    className="flex-1 bg-primary text-primary-foreground py-4 rounded-xl text-sm font-bold shadow-xl shadow-primary/20 hover:opacity-90 transition-all flex items-center justify-center gap-2 group active:scale-95"
+                    onClick={onSubmit}
+                    disabled={loading}
+                    className="flex-1 bg-primary text-primary-foreground py-4 rounded-xl text-sm font-bold shadow-xl shadow-primary/20 hover:opacity-90 transition-all flex items-center justify-center gap-2 group active:scale-95 disabled:opacity-50"
                 >
-                    Pay Now
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    {loading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                        <>
+                            Pay Now
+                            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        </>
+                    )}
                 </button>
             </div>
 

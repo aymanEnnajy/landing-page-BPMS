@@ -15,6 +15,7 @@ import { Pricing } from './sections/Pricing'
 import { CTA } from './sections/CTA'
 import PaymentPage from './pages/PaymentPage'
 import SignUpPage from './pages/SignUpPage'
+import LoginPage from './pages/LoginPage'
 
 function HomePage() {
   return (
@@ -46,6 +47,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/paiment" element={<PaymentPage />} />
           <Route path="/signup" element={<SignUpPage />} />
+          <Route path="/login" element={<LoginPage />} />
         </Routes>
         <FloatingActions />
       </div>

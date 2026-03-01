@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { PaymentCard } from "../components/paiment/PaymentCard";
 import { PaymentForm } from "../components/paiment/PaymentForm";
 import { ThemeToggle } from "../components/paiment/ThemeToggle";
 
 export default function PaymentPage() {
+    const navigate = useNavigate();
+
     const [theme, setTheme] = useState<'light' | 'dark'>(() => {
         if (typeof window !== 'undefined') {
             return (localStorage.getItem('theme') as 'light' | 'dark') || 'dark';
@@ -20,6 +23,8 @@ export default function PaymentPage() {
     });
 
     const [isFlipped, setIsFlipped] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const root = window.document.documentElement;
@@ -27,6 +32,67 @@ export default function PaymentPage() {
         root.classList.add(theme);
         localStorage.setItem('theme', theme);
     }, [theme]);
+
+    // ─── Payment Submit Handler ──────────────────────────────
+    const handlePaymentSubmit = async () => {
+        setLoading(true);
+        setError(null);
+
+        // Validation
+        const rawCardNumber = formData.cardNumber.replace(/\s/g, '');
+        if (rawCardNumber.length < 13) {
+            setError("Please enter a valid card number");
+            setLoading(false);
+            return;
+        }
+        if (!formData.cardHolder.trim()) {
+            setError("Please enter the card holder name");
+            setLoading(false);
+            return;
+        }
+        if (!formData.expiryDate || formData.expiryDate.length < 5) {
+            setError("Please enter a valid expiration date (MM/YY)");
+            setLoading(false);
+            return;
+        }
+        if (!formData.cvc || formData.cvc.length < 3) {
+            setError("Please enter a valid CVC");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            // Store payment info temporarily in localStorage
+            // It will be saved to the database AFTER registration (when user is authenticated)
+            const [expMonth, expYear] = formData.expiryDate.split('/');
+            const lastFour = rawCardNumber.slice(-4);
+
+            // Detect card brand
+            let brand = "Unknown";
+            if (/^4/.test(rawCardNumber)) brand = "Visa";
+            else if (/^5[1-5]/.test(rawCardNumber)) brand = "Mastercard";
+            else if (/^3[47]/.test(rawCardNumber)) brand = "Amex";
+
+            const paymentData = {
+                card_holder_name: formData.cardHolder,
+                card_last_four: lastFour,
+                card_brand: brand,
+                expiration_month: expMonth,
+                expiration_year: `20${expYear}`,
+                status: "pending",
+            };
+
+            localStorage.setItem("pending_payment", JSON.stringify(paymentData));
+
+            // Redirect to registration page
+            navigate("/signup");
+
+        } catch (err: any) {
+            setError(err.message || "Payment processing failed");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const floatAnim = {
         initial: { y: 0 },
@@ -77,6 +143,9 @@ export default function PaymentPage() {
                                 formData={formData}
                                 setFormData={setFormData}
                                 setIsFlipped={setIsFlipped}
+                                onSubmit={handlePaymentSubmit}
+                                loading={loading}
+                                error={error}
                             />
                         </div>
                     </div>
@@ -94,7 +163,7 @@ export default function PaymentPage() {
                     </div>
                 </div>
 
-                {/* Decorative blurs moved inside to avoid overflow issues */}
+                {/* Decorative blurs */}
                 <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none -z-10" />
                 <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10" />
             </motion.div>

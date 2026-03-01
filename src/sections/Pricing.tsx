@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { Container, Section } from "../components/ui/Layout"
 import { Reveal } from "../components/animations/Reveal"
 import { Button } from "../components/ui/Button"
@@ -6,12 +6,15 @@ import { Card } from "../components/ui/Card"
 import { Check, ArrowRight } from "lucide-react"
 
 export function Pricing() {
+    const navigate = useNavigate();
+
     const plans = [
         {
             name: "Pro Monthly",
             duration: "1 Month",
-            price: "700",
-            currency: "DH",
+            durationMonths: 1,
+            price: 700,
+            currency: "MAD",
             description: "Perfect for short-term projects and testing the full power of BPMS.",
             features: [
                 "Full AI Process Automation",
@@ -26,8 +29,9 @@ export function Pricing() {
         {
             name: "Enterprise Semi-Annual",
             duration: "6 Months",
-            price: "3500",
-            currency: "DH",
+            durationMonths: 6,
+            price: 3500,
+            currency: "MAD",
             description: "Scale your business with a stable environment and elite features.",
             features: [
                 "Full AI Process Automation",
@@ -43,8 +47,9 @@ export function Pricing() {
         {
             name: "Global Annual",
             duration: "12 Months",
-            price: "5500",
-            currency: "DH",
+            durationMonths: 12,
+            price: 5500,
+            currency: "MAD",
             description: "The ultimate value for long-term growth and total business transformation.",
             features: [
                 "Full AI Process Automation",
@@ -58,7 +63,19 @@ export function Pricing() {
             cta: "Get Best Value",
             featured: true
         }
-    ]
+    ];
+
+    const handleSelectPlan = (plan: typeof plans[0]) => {
+        // Save plan reliably BEFORE navigating
+        localStorage.setItem("selected_plan", JSON.stringify({
+            plan_name: plan.name,
+            duration: plan.duration,
+            duration_months: plan.durationMonths,
+            price: plan.price,
+            currency: plan.currency,
+        }));
+        navigate("/paiment");
+    };
 
     return (
         <Section id="pricing" className="bg-secondary/30 relative">
@@ -114,12 +131,10 @@ export function Pricing() {
                                     size="lg"
                                     variant={plan.featured ? "primary" : "outline"}
                                     className="w-full group"
-                                    asChild
+                                    onClick={() => handleSelectPlan(plan)}
                                 >
-                                    <Link to="/paiment">
-                                        {plan.cta}
-                                        <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                    </Link>
+                                    {plan.cta}
+                                    <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                 </Button>
                             </Card>
                         </Reveal>
