@@ -127,8 +127,7 @@ export function AIAgent() {
                             style={{
                                 transformStyle: "preserve-3d",
                                 transform: "translateZ(20px)",
-                                shadow: "0 10px 20px rgba(var(--primary-rgb), 0.2)"
-                            }}
+                            } as any}
                         />
                         {/* Status Pulse Nodes */}
                         <div className="absolute -left-4 w-1.5 h-1.5 rounded-full bg-primary/50 dark:bg-primary/40 shadow-[0_0_8px_var(--primary)]" />
