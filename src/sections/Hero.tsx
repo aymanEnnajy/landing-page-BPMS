@@ -8,7 +8,7 @@ import { Link } from "react-router-dom"
 
 export function Hero() {
     return (
-        <section className="relative h-screen flex items-center overflow-hidden bg-background">
+        <section className="relative h-screen flex flex-col justify-center overflow-hidden bg-background">
             {/* 1. LAYER ONE: Cinematic background (Flares, particles) */}
             <CinematicVisual />
 
@@ -16,8 +16,8 @@ export function Hero() {
             <FloatingGraph />
 
             {/* 3. LAYER THREE: Main Content UI */}
-            <Container className="relative z-20 w-full pt-32 lg:pt-40">
-                <div className="max-w-4xl">
+            <Container className="relative z-20 w-full">
+                <div className="max-w-4xl mt-16 md:mt-20">
                     <Reveal delay={0.1}>
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass mb-8 border border-accent/20 bg-secondary/10 backdrop-blur-xl">
                             <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />

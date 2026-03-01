@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { PaymentCard } from "../components/paiment/PaymentCard";
 import { PaymentForm } from "../components/paiment/PaymentForm";
 import { ThemeToggle } from "../components/paiment/ThemeToggle";
@@ -109,6 +110,15 @@ export default function PaymentPage() {
     return (
         <div className="min-h-[100dvh] lg:h-[100dvh] bg-background text-foreground transition-colors duration-500 overflow-y-auto lg:overflow-hidden p-4 md:p-8 flex flex-col items-center justify-center relative">
             <ThemeToggle theme={theme} setTheme={setTheme} />
+
+            <Link
+                to="/"
+                className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors z-50 glass px-4 py-2 rounded-full border border-white/10 bg-background/50 backdrop-blur-md"
+            >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Return to Home</span>
+                <span className="sm:hidden">Back</span>
+            </Link>
 
             <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}

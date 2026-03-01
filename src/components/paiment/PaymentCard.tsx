@@ -88,26 +88,26 @@ export function PaymentCard({ formData, isFlipped }: PaymentCardProps) {
                         </div>
                     </div>
 
-                    <div className="z-10 mt-auto">
-                        <div className="text-2xl font-mono tracking-[0.15em] mb-4 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] flex justify-between">
+                    <div className="z-10 mt-auto pt-4 flex flex-col gap-4">
+                        <div className="text-xl sm:text-2xl font-mono tracking-[0.1em] sm:tracking-[0.15em] text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
                             {formData.cardNumber ? formData.cardNumber : "4714 3807 0620 0002"}
                         </div>
 
-                        <div className="flex justify-between items-end">
-                            <div className="flex flex-col">
-                                <span className="text-[8px] uppercase tracking-widest opacity-40 mb-1">Card Holder</span>
-                                <span className="text-xs font-bold tracking-widest uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                        <div className="flex justify-between items-end gap-2 w-full">
+                            <div className="flex flex-col flex-1 min-w-0 pr-2">
+                                <span className="text-[6px] sm:text-[8px] uppercase tracking-widest opacity-40 mb-1">Card Holder</span>
+                                <span className="text-[10px] sm:text-xs font-bold tracking-widest uppercase drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] line-clamp-1 truncate block w-full">
                                     {formData.cardHolder || "MR LAHLOU MOHAMMED AMINE"}
                                 </span>
                             </div>
-                            <div className="flex flex-col items-center">
-                                <span className="text-[6px] uppercase tracking-[0.2em] opacity-40 mb-1">VALID THRU</span>
-                                <span className="text-xs font-mono font-bold tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+                            <div className="flex flex-col items-center shrink-0 w-16">
+                                <span className="text-[5px] sm:text-[6px] uppercase tracking-[0.2em] opacity-40 mb-1">VALID THRU</span>
+                                <span className="text-[10px] sm:text-xs font-mono font-bold tracking-widest drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
                                     {formData.expiryDate || "12/28"}
                                 </span>
                             </div>
-                            <div className="w-16 h-10">
-                                <span className="text-2xl font-black italic tracking-tighter opacity-90 block text-right">VISA</span>
+                            <div className="w-12 sm:w-16 h-8 sm:h-10 flex justify-end items-end shrink-0">
+                                <span className="text-xl sm:text-2xl font-black italic tracking-tighter opacity-90 block">VISA</span>
                             </div>
                         </div>
                     </div>

@@ -36,8 +36,9 @@ const KPICard = ({ title, value, trend, icon: Icon }: { title: string, value: st
 );
 
 const AdminDashboard = () => (
-    <div className="flex h-full bg-background text-foreground overflow-hidden rounded-3xl border border-accent shadow-2xl">
-        <div className="w-64 border-r border-accent p-6 flex flex-col gap-1 shrink-0 bg-secondary/10">
+    <div className="flex flex-col md:flex-row h-full bg-background text-foreground overflow-hidden rounded-3xl border border-accent shadow-2xl">
+        {/* Sidebar - hidden on mobile */}
+        <div className="hidden md:flex w-64 border-r border-accent p-6 flex-col gap-1 shrink-0 bg-secondary/10">
             <div className="flex items-center gap-2 mb-8 px-2">
                 <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
                     <Building2 className="w-5 h-5 text-primary-foreground" />
@@ -55,22 +56,26 @@ const AdminDashboard = () => (
                 <SidebarItem icon={Settings} label="Settings" />
             </div>
         </div>
-        <div className="flex-1 p-8 overflow-y-auto no-scrollbar">
-            <div className="flex justify-between items-end mb-8">
+
+        {/* Main Content */}
+        <div className="flex-1 p-4 md:p-8 overflow-y-auto no-scrollbar">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4 mb-8">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">Admin Dashboard</h2>
-                    <p className="text-muted text-sm">Global enterprise overview and controls.</p>
+                    <h2 className="text-xl md:text-2xl font-bold tracking-tight">Admin Dashboard</h2>
+                    <p className="text-muted text-sm line-clamp-1 md:line-clamp-none">Global enterprise overview and controls.</p>
                 </div>
-                <div className="h-10 w-32 rounded-lg bg-secondary/30 border border-accent" />
+                <div className="hidden md:block h-10 w-32 rounded-lg bg-secondary/30 border border-accent" />
             </div>
-            <div className="grid grid-cols-4 gap-6 mb-8">
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
                 <KPICard title="Total Employees" value="1,284" trend="+12%" icon={Users} />
                 <KPICard title="Active Managers" value="48" icon={UserCheck} />
                 <KPICard title="Live Projects" value="32" icon={Briefcase} />
-                <KPICard title="Monthly Revenue" value="$42,500" trend="+8%" icon={Wallet} />
+                <KPICard title="Monthly Rev" value="$42.5k" trend="+8%" icon={Wallet} />
             </div>
-            <div className="grid grid-cols-3 gap-6">
-                <div className="col-span-2 p-6 rounded-2xl bg-secondary/20 border border-accent glass min-h-[300px]">
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 p-6 rounded-2xl bg-secondary/20 border border-accent glass min-h-[250px] md:min-h-[300px]">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="font-bold">Growth Analytics</h3>
                     </div>
@@ -100,8 +105,8 @@ const AdminDashboard = () => (
 );
 
 const HRDashboard = () => (
-    <div className="flex h-full bg-background text-foreground overflow-hidden rounded-3xl border border-accent shadow-2xl">
-        <div className="w-64 border-r border-accent p-6 flex flex-col gap-1 shrink-0 bg-secondary/10">
+    <div className="flex flex-col md:flex-row h-full bg-background text-foreground overflow-hidden rounded-3xl border border-accent shadow-2xl">
+        <div className="hidden md:flex w-64 border-r border-accent p-6 flex-col gap-1 shrink-0 bg-secondary/10">
             <div className="flex items-center gap-2 mb-8 px-2">
                 <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
                     <Users className="w-5 h-5 text-primary-foreground" />
@@ -119,37 +124,39 @@ const HRDashboard = () => (
                 <SidebarItem icon={Sparkles} label="AI Assistant" />
             </div>
         </div>
-        <div className="flex-1 p-8 overflow-y-auto no-scrollbar">
-            <h2 className="text-2xl font-bold tracking-tight mb-8">HR Management</h2>
-            <div className="grid grid-cols-3 gap-6 mb-8">
+        <div className="flex-1 p-4 md:p-8 overflow-y-auto no-scrollbar">
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight mb-8">HR Management</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
                 <KPICard title="On Leave Today" value="8" icon={Calendar} />
-                <KPICard title="Pending Documents" value="24" icon={FileText} />
-                <KPICard title="Payroll Status" value="Processing" icon={Wallet} />
+                <KPICard title="Pending Docs" value="24" icon={FileText} />
+                <div className="hidden lg:block">
+                    <KPICard title="Payroll Status" value="Processing" icon={Wallet} />
+                </div>
             </div>
-            <div className="grid grid-cols-2 gap-6">
-                <div className="p-6 rounded-2xl bg-secondary/20 border border-accent glass">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="p-4 md:p-6 rounded-2xl bg-secondary/20 border border-accent glass max-h-[250px] overflow-hidden">
                     <h3 className="font-bold mb-4">Leave Calendar</h3>
-                    <div className="grid grid-cols-7 gap-2">
+                    <div className="grid grid-cols-7 gap-1 md:gap-2">
                         {Array.from({ length: 28 }).map((_, i) => (
                             <div key={i} className={cn(
-                                "h-10 rounded-lg flex items-center justify-center text-xs",
+                                "h-8 md:h-10 rounded-lg flex items-center justify-center text-[10px] md:text-xs",
                                 i === 12 ? "bg-primary text-primary-foreground font-bold" : "bg-secondary text-muted"
                             )}>{i + 1}</div>
                         ))}
                     </div>
                 </div>
-                <div className="p-6 rounded-2xl bg-secondary/20 border border-accent glass">
+                <div className="p-4 md:p-6 rounded-2xl bg-secondary/20 border border-accent glass">
                     <h3 className="font-bold mb-4">Validation Queue</h3>
                     {[1, 2, 3].map(item => (
                         <div key={item} className="flex items-center justify-between p-3 border-b border-accent last:border-0">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-secondary" />
+                                <div className="w-8 h-8 rounded-full bg-secondary shrink-0" />
                                 <div className="text-sm">
-                                    <div className="font-medium">Sarah Connor</div>
-                                    <div className="text-xs text-muted">Vacation Request</div>
+                                    <div className="font-medium line-clamp-1">Sarah Connor</div>
+                                    <div className="text-[10px] md:text-xs text-muted line-clamp-1">Vacation Request</div>
                                 </div>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 shrink-0">
                                 <div className="w-6 h-6 rounded bg-emerald-500/20 flex items-center justify-center">
                                     <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                                 </div>
@@ -163,8 +170,8 @@ const HRDashboard = () => (
 );
 
 const EmployeeDashboard = () => (
-    <div className="flex h-full bg-background text-foreground overflow-hidden rounded-3xl border border-accent shadow-2xl">
-        <div className="w-64 border-r border-accent p-6 flex flex-col gap-1 shrink-0 bg-secondary/10">
+    <div className="flex flex-col md:flex-row h-full bg-background text-foreground overflow-hidden rounded-3xl border border-accent shadow-2xl">
+        <div className="hidden md:flex w-64 border-r border-accent p-6 flex-col gap-1 shrink-0 bg-secondary/10">
             <div className="flex items-center gap-2 mb-8 px-2">
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
                     <div className="w-5 h-5 rounded-full bg-primary-foreground" />
@@ -180,30 +187,32 @@ const EmployeeDashboard = () => (
                 <SidebarItem icon={Sparkles} label="Productivity Agent" />
             </div>
         </div>
-        <div className="flex-1 p-8 overflow-y-auto no-scrollbar">
-            <div className="mb-8">
-                <h2 className="text-2xl font-bold tracking-tight">Welcome, Alex</h2>
-                <p className="text-muted text-sm">You have 4 tasks to complete today.</p>
+        <div className="flex-1 p-4 md:p-8 overflow-y-auto no-scrollbar">
+            <div className="mb-6 md:mb-8">
+                <h2 className="text-xl md:text-2xl font-bold tracking-tight">Welcome, Alex</h2>
+                <p className="text-[10px] md:text-sm text-muted">You have 4 tasks to complete today.</p>
             </div>
-            <div className="grid grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
                 <KPICard title="Task Progress" value="65%" icon={TrendingUp} />
-                <KPICard title="Leave Days" value="12 Rem." icon={Calendar} />
-                <KPICard title="Performance" value="Top 10%" icon={Sparkles} />
+                <KPICard title="Leave Days" value="12" icon={Calendar} />
+                <div className="hidden lg:block">
+                    <KPICard title="Performance" value="Top 10%" icon={Sparkles} />
+                </div>
             </div>
-            <div className="p-6 rounded-2xl bg-secondary/20 border border-accent glass">
+            <div className="p-4 md:p-6 rounded-2xl bg-secondary/20 border border-accent glass">
                 <h3 className="font-bold mb-4">My Tasks</h3>
                 {[
                     { t: "Update Documentation", d: "Due in 2 days", s: "In Progress" },
                     { t: "Performance Review", d: "Tomorrow", s: "Pending" },
                     { t: "Expense Report", d: "Today", s: "Urgent" }
                 ].map((task, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 bg-secondary/30 rounded-xl mb-3 last:mb-0">
-                        <div>
-                            <div className="text-sm font-medium text-foreground">{task.t}</div>
-                            <div className="text-xs text-muted">{task.d}</div>
+                    <div key={i} className="flex items-center justify-between p-3 md:p-4 bg-secondary/30 rounded-xl mb-3 last:mb-0">
+                        <div className="pr-2">
+                            <div className="text-[11px] md:text-sm font-medium text-foreground line-clamp-1">{task.t}</div>
+                            <div className="text-[9px] md:text-xs text-muted">{task.d}</div>
                         </div>
                         <span className={cn(
-                            "text-[10px] uppercase tracking-widest font-bold px-2 py-1 rounded",
+                            "text-[8px] md:text-[10px] uppercase tracking-widest font-bold px-2 py-1 rounded shrink-0",
                             task.s === "Urgent" ? "bg-red-500/20 text-red-500" : "bg-primary/10 text-muted"
                         )}>{task.s}</span>
                     </div>

@@ -65,12 +65,12 @@ export function FloatingGraph() {
 
                 {/* Scattered Decentralized Elements */}
 
-                {/* 1. Growth Card (Top Left-ish) */}
+                {/* 1. Growth Card (Middle Right) */}
                 <motion.div
                     animate={{ y: [0, -40, 0], x: [0, 20, 0] }}
                     transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
                     style={{ translateZ: "120px" }}
-                    className="absolute top-[20%] left-[10%] p-4 glass border border-white/10 rounded-2xl shadow-2xl flex items-center gap-4 border-l-4 border-l-primary hidden lg:flex pointer-events-auto"
+                    className="absolute top-[50%] right-[10%] p-4 glass border border-white/10 rounded-2xl shadow-2xl flex items-center gap-4 border-l-4 border-l-primary hidden lg:flex pointer-events-auto"
                 >
                     <div className="p-2 bg-primary/10 rounded-lg">
                         <TrendingUp className="w-5 h-5 text-primary" />
