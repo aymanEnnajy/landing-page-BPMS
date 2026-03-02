@@ -8,6 +8,7 @@ import {
 import { cn } from "../lib/utils";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { supabaseDb2 } from "../lib/supabase_db2";
 import { FormInput, FormSelect, FormImageUpload } from "../components/signup/FormComponents";
 
 // ─── Steps ───────────────────────────────────────────────────
@@ -94,7 +95,7 @@ export default function SignUpPage() {
         setError(null);
 
         try {
-            // ── 1. Auth Sign Up ──────────────────────────────
+            // ── 1. Auth Sign Up in DB1 ───────────────────────
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: formData.email,
                 password: formData.password,
@@ -111,7 +112,7 @@ export default function SignUpPage() {
 
             const userId = authData.user.id;
 
-            // ── 2. Convert images to base64 (stored directly in DB) ─
+            // ── 2. Convert images to base64 ──────────────────
             let profilePhotoUrl: string | null = null;
             if (formData.profilePhoto) {
                 try { profilePhotoUrl = await fileToBase64(formData.profilePhoto); }
@@ -131,16 +132,14 @@ export default function SignUpPage() {
 
             const plan = selectedPlan;
 
-            // Calculate subscription dates from payment date
+            // Calculate subscription dates
             const startDate = new Date();
             const endDate = new Date(startDate);
             if (plan) {
-                // Use explicit duration_months (e.g. 1, 6, 12) — no string parsing
                 endDate.setMonth(endDate.getMonth() + (plan.duration_months ?? 1));
             }
 
-            // ── 4. Single RPC call — all 4 tables inserted ───
-            // The SECURITY DEFINER function bypasses FK permission issues
+            // ── 4. Write to DB1: RPC call ────────────────────
             const { error: rpcError } = await supabase.rpc("register_owner_and_company", {
                 // Owner
                 p_user_id: userId,
@@ -180,9 +179,117 @@ export default function SignUpPage() {
                 p_end_date: plan ? endDate.toISOString().split("T")[0] : null,
             });
 
-            if (rpcError) throw new Error(rpcError.message);
+            if (rpcError) throw new Error(`DB1 Error: ${rpcError.message}`);
 
-            // Clean up localStorage
+            // ── 5. Write to DB2: Create Auth Account ─────────
+            console.log("── DB2 Step 5: Creating auth account...");
+            const { data: db2AuthData, error: db2AuthError } = await supabaseDb2.auth.signUp({
+                email: formData.email,
+                password: formData.password,
+                options: {
+                    data: {
+                        first_name: formData.firstName,
+                        last_name: formData.lastName,
+                        role: "admin",
+                    },
+                },
+            });
+
+            console.log("DB2 Auth Result:", { db2AuthData, db2AuthError });
+            if (db2AuthError) throw new Error(`DB2 Auth Error: ${db2AuthError.message}`);
+            if (!db2AuthData.user) throw new Error("DB2 account creation failed — no user returned");
+            if (db2AuthData.user.identities && db2AuthData.user.identities.length === 0) {
+                throw new Error("DB2 Auth Error: This email is already registered in DB2. Delete the user from DB2 Authentication → Users first.");
+            }
+
+            const db2AuthUserId = db2AuthData.user.id;
+            console.log("✅ DB2 Auth User created:", db2AuthUserId);
+
+            // Build helper values
+            const avatarInitials = `${formData.firstName.charAt(0)}${formData.lastName.charAt(0)}`.toUpperCase();
+            const location = [formData.companyAddress, formData.city].filter(Boolean).join(", ") || null;
+
+            // Map plan names → DB2 enterprise_plan enum: 'Starter', 'Business', 'Enterprise'
+            let db2Plan: string | null = null;
+            if (plan?.plan_name) {
+                const lower = plan.plan_name.toLowerCase();
+                if (lower.includes("pro")) db2Plan = "Starter";
+                else if (lower.includes("enterprise") || lower.includes("semi")) db2Plan = "Business";
+                else if (lower.includes("global")) db2Plan = "Enterprise";
+                else db2Plan = "Starter";
+            }
+            console.log("DB2 Plan mapped:", plan?.plan_name, "→", db2Plan);
+
+            // ── 6a. Insert into DB2: entreprises ─────────────
+            console.log("── DB2 Step 6a: Inserting into entreprises...");
+            const { data: entreData, error: entreError } = await supabaseDb2
+                .from("entreprises")
+                .insert({
+                    name: formData.companyName,
+                    industry: formData.legalForm || null,
+                    phone: formData.companyPhone || null,
+                    email: formData.companyEmail || null,
+                    location: location,
+                    status: "active",
+                    plan: db2Plan,
+                    legal_form: formData.legalForm || null,
+                    ice: formData.ice || null,
+                    rc: formData.rc || null,
+                    if_number: formData.ifNumber || null,
+                    cnss: formData.cnss || null,
+                    patente: formData.patente || null,
+                    country: "Morocco",
+                    logo_url: logoUrl,
+                })
+                .select("id")
+                .single();
+
+            console.log("DB2 entreprises result:", { entreData, entreError });
+            if (entreError) throw new Error(`DB2 entreprises Error: ${entreError.message}`);
+            const entrepriseId = entreData.id;
+            console.log("✅ DB2 entreprise created:", entrepriseId);
+
+            // ── 6b. Insert into DB2: users ───────────────────
+            console.log("── DB2 Step 6b: Inserting into users...");
+            const { data: userData, error: userError } = await supabaseDb2
+                .from("users")
+                .insert({
+                    id: db2AuthUserId,
+                    entreprise_id: entrepriseId,
+                    name: `${formData.firstName} ${formData.lastName}`,
+                    email: formData.email,
+                    role: "admin",
+                    status: "active",
+                    avatar_initials: avatarInitials,
+                    password_hash: formData.password,
+                })
+                .select("id")
+                .single();
+
+            console.log("DB2 users result:", { userData, userError });
+            if (userError) throw new Error(`DB2 users Error: ${userError.message}`);
+            console.log("✅ DB2 user created:", userData.id);
+
+            // ── 6c. Insert into DB2: admin_profiles ──────────
+            console.log("── DB2 Step 6c: Inserting into admin_profiles...");
+            const { data: adminData, error: adminError } = await supabaseDb2
+                .from("admin_profiles")
+                .insert({
+                    user_id: userData.id,
+                    first_name: formData.firstName,
+                    last_name: formData.lastName,
+                    email: formData.email,
+                    password_hash: formData.password,
+                    auth_user_id: db2AuthUserId,
+                })
+                .select("id")
+                .single();
+
+            console.log("DB2 admin_profiles result:", { adminData, adminError });
+            if (adminError) throw new Error(`DB2 admin_profiles Error: ${adminError.message}`)
+            console.log("✅ DB2 admin_profile created:", adminData.id);
+
+            // ── 7. Clean up localStorage ─────────────────────
             localStorage.removeItem("pending_payment");
             localStorage.removeItem("selected_plan");
 
