@@ -220,74 +220,38 @@ export default function SignUpPage() {
             }
             console.log("DB2 Plan mapped:", plan?.plan_name, "→", db2Plan);
 
-            // ── 6a. Insert into DB2: entreprises ─────────────
-            console.log("── DB2 Step 6a: Inserting into entreprises...");
-            const { data: entreData, error: entreError } = await supabaseDb2
-                .from("entreprises")
-                .insert({
-                    name: formData.companyName,
-                    industry: formData.legalForm || null,
-                    phone: formData.companyPhone || null,
-                    email: formData.companyEmail || null,
-                    location: location,
-                    status: "active",
-                    plan: db2Plan,
-                    legal_form: formData.legalForm || null,
-                    ice: formData.ice || null,
-                    rc: formData.rc || null,
-                    if_number: formData.ifNumber || null,
-                    cnss: formData.cnss || null,
-                    patente: formData.patente || null,
-                    country: "Morocco",
-                    logo_url: logoUrl,
-                })
-                .select("id")
-                .single();
+            // ── 6. Write to DB2: Provision Enterprise + Admin (SECURE RPC) ─
+            console.log("── DB2 Step 6: Calling secure provision_enterprise_admin RPC...");
 
-            console.log("DB2 entreprises result:", { entreData, entreError });
-            if (entreError) throw new Error(`DB2 entreprises Error: ${entreError.message}`);
-            const entrepriseId = entreData.id;
-            console.log("✅ DB2 entreprise created:", entrepriseId);
+            // Single RPC call that atomically inserts Data safely using SECURITY DEFINER
+            const { data: db2RpcData, error: db2RpcError } = await supabaseDb2.rpc("provision_enterprise_admin", {
+                p_auth_user_id: db2AuthUserId,
+                // Entreprise fields
+                p_name: formData.companyName,
+                p_industry: formData.legalForm || null,
+                p_phone: formData.companyPhone || null,
+                p_email: formData.companyEmail || null,
+                p_location: location,
+                p_plan: db2Plan,
+                p_legal_form: formData.legalForm || null,
+                p_ice: formData.ice || null,
+                p_rc: formData.rc || null,
+                p_if_number: formData.ifNumber || null,
+                p_cnss: formData.cnss || null,
+                p_patente: formData.patente || null,
+                p_country: "Morocco",
+                p_logo_url: logoUrl,
+                // Admin user fields
+                p_first_name: formData.firstName,
+                p_last_name: formData.lastName,
+                p_user_email: formData.email,
+                p_password_hash: formData.password,
+                p_avatar_initials: avatarInitials,
+            });
 
-            // ── 6b. Insert into DB2: users ───────────────────
-            console.log("── DB2 Step 6b: Inserting into users...");
-            const { data: userData, error: userError } = await supabaseDb2
-                .from("users")
-                .insert({
-                    id: db2AuthUserId,
-                    entreprise_id: entrepriseId,
-                    name: `${formData.firstName} ${formData.lastName}`,
-                    email: formData.email,
-                    role: "admin",
-                    status: "active",
-                    avatar_initials: avatarInitials,
-                    password_hash: formData.password,
-                })
-                .select("id")
-                .single();
-
-            console.log("DB2 users result:", { userData, userError });
-            if (userError) throw new Error(`DB2 users Error: ${userError.message}`);
-            console.log("✅ DB2 user created:", userData.id);
-
-            // ── 6c. Insert into DB2: admin_profiles ──────────
-            console.log("── DB2 Step 6c: Inserting into admin_profiles...");
-            const { data: adminData, error: adminError } = await supabaseDb2
-                .from("admin_profiles")
-                .insert({
-                    user_id: userData.id,
-                    first_name: formData.firstName,
-                    last_name: formData.lastName,
-                    email: formData.email,
-                    password_hash: formData.password,
-                    auth_user_id: db2AuthUserId,
-                })
-                .select("id")
-                .single();
-
-            console.log("DB2 admin_profiles result:", { adminData, adminError });
-            if (adminError) throw new Error(`DB2 admin_profiles Error: ${adminError.message}`)
-            console.log("✅ DB2 admin_profile created:", adminData.id);
+            console.log("DB2 RPC Result:", { db2RpcData, db2RpcError });
+            if (db2RpcError) throw new Error(`DB2 Security Error: ${db2RpcError.message}`);
+            console.log("✅ DB2 Secure Provisioning Complete");
 
             // ── 7. Clean up localStorage ─────────────────────
             localStorage.removeItem("pending_payment");

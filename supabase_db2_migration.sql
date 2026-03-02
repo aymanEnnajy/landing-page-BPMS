@@ -1,5 +1,5 @@
 -- ============================================================
--- DB2 (BPMS PFF SaaS Database) — Migration Script
+-- DB2 (BPMS PFF SaaS Database) — Secure Migration Script
 -- Run this in the Supabase SQL Editor of DB2 (BPMS PFF project)
 -- ============================================================
 
@@ -8,8 +8,6 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================================
 -- STEP 1: Safely add missing values to ENUM types
--- These ensure 'admin', 'active' etc. exist before we insert.
--- The DO $$ block avoids errors if the value already exists.
 -- ============================================================
 
 -- Add 'admin' to user_role enum if not already there
@@ -58,47 +56,40 @@ ALTER TABLE public.users
   ADD COLUMN IF NOT EXISTS password_hash  text;
 
 -- ============================================================
--- STEP 5: RLS Policies
--- Allow anonymous inserts (signup runs before session exists)
+-- STEP 5: RE-ENABLE SECURE RLS POLICIES
 -- ============================================================
 ALTER TABLE public.entreprises   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_profiles ENABLE ROW LEVEL SECURITY;
 
--- Remove old conflicting policies first
+-- Drop all old policies to start fresh
 DROP POLICY IF EXISTS "Allow anon insert on entreprises"    ON public.entreprises;
 DROP POLICY IF EXISTS "Allow anon insert on users"          ON public.users;
 DROP POLICY IF EXISTS "Allow anon insert on admin_profiles" ON public.admin_profiles;
+DROP POLICY IF EXISTS "Allow anon select on entreprises"    ON public.entreprises;
+DROP POLICY IF EXISTS "Allow anon select on users"          ON public.users;
+DROP POLICY IF EXISTS "Allow anon select on admin_profiles" ON public.admin_profiles;
 DROP POLICY IF EXISTS "Users can view own data"             ON public.users;
 DROP POLICY IF EXISTS "Admins can view their entreprise"    ON public.entreprises;
 
--- Insert policies (open to anon so signup can write data)
-CREATE POLICY "Allow anon insert on entreprises"
-  ON public.entreprises FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Allow anon insert on users"
-  ON public.users FOR INSERT WITH CHECK (true);
-
-CREATE POLICY "Allow anon insert on admin_profiles"
-  ON public.admin_profiles FOR INSERT WITH CHECK (true);
-
--- Read policies (only authenticated users see their own data)
+-- Create Secure Read Policies for Authenticated Users (SaaS App usage)
 CREATE POLICY "Users can view own data"
-  ON public.users FOR SELECT
+  ON public.users FOR SELECT TO authenticated
   USING (auth.uid() = id);
 
 CREATE POLICY "Admins can view their entreprise"
-  ON public.entreprises FOR SELECT
+  ON public.entreprises FOR SELECT TO authenticated
   USING (id IN (
     SELECT entreprise_id FROM public.users WHERE id = auth.uid()
   ));
 
+-- Note: We are NO LONGER allowing direct anonymous inserts!
+-- All anonymous signups MUST go through the SECURITY DEFINER function below.
+
 -- ============================================================
 -- STEP 6: SECURITY DEFINER function: provision_enterprise_admin
--- This function runs as postgres (elevated perms), so it can
--- bypass RLS and FK restrictions safely during signup.
---
--- Parameters: 20 total (1 uuid + 19 text)
+-- This function runs as the database owner (bypassing RLS safely)
+-- It ensures all 3 tables are written simultaneously during signup.
 -- ============================================================
 
 -- Drop the OLD version if it exists (any signature)
@@ -115,8 +106,8 @@ CREATE OR REPLACE FUNCTION public.provision_enterprise_admin(
   p_phone          text,     -- company phone
   p_email          text,     -- company email
   p_location       text,     -- address + city combined
-  p_plan           text,     -- selected plan name
-  p_legal_form     text,     -- legal form (SARL, SA, etc.)
+  p_plan           text,     -- the validated enum string (Starter/Business/Enterprise)
+  p_legal_form     text,
   p_ice            text,
   p_rc             text,
   p_if_number      text,
@@ -128,11 +119,11 @@ CREATE OR REPLACE FUNCTION public.provision_enterprise_admin(
   p_last_name      text,     -- admin last name
   p_user_email     text,     -- admin email (same as owner)
   p_password_hash  text,     -- password (for reference storage)
-  p_avatar_initials text     -- e.g. "TM" for Taha Mizi
+  p_avatar_initials text     -- e.g. "TM"
 )
 RETURNS json
 LANGUAGE plpgsql
-SECURITY DEFINER
+SECURITY DEFINER   -- CRITICAL: Runs as admin, bypassing RLS for inserts
 SET search_path = public
 AS $$
 DECLARE
@@ -151,8 +142,8 @@ BEGIN
     p_phone,
     p_email,
     p_location,
-    'active'::enterprise_status,   -- cast to enum safely
-    p_plan::enterprise_plan,       -- cast text to enum safely
+    'active'::enterprise_status,
+    p_plan::enterprise_plan,
     p_legal_form,
     p_ice,
     p_rc,
@@ -177,8 +168,8 @@ BEGIN
     v_entreprise_id,
     p_first_name || ' ' || p_last_name,
     p_user_email,
-    'admin'::user_role,            -- cast to enum safely
-    'active'::user_status,         -- cast to enum safely
+    'admin'::user_role,
+    'active'::user_status,
     p_avatar_initials,
     p_password_hash,
     now(),
@@ -214,13 +205,14 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$;
 
--- Grant execute to both anon (pre-session signup) and authenticated
+-- Grant execution rights to anonymous users (for the signup page)
 GRANT EXECUTE ON FUNCTION public.provision_enterprise_admin(
   uuid, text, text, text, text, text,
   text, text, text, text, text, text, text, text, text,
   text, text, text, text, text
 ) TO anon;
 
+-- Grant execution rights to authenticated users
 GRANT EXECUTE ON FUNCTION public.provision_enterprise_admin(
   uuid, text, text, text, text, text,
   text, text, text, text, text, text, text, text, text,
@@ -228,14 +220,14 @@ GRANT EXECUTE ON FUNCTION public.provision_enterprise_admin(
 ) TO authenticated;
 
 -- ============================================================
--- ✅ MIGRATION COMPLETE — Safe to run
+-- ✅ SECURE MIGRATION COMPLETE
 -- ============================================================
 -- What this does:
 --   1. Safely adds enum values (admin, active) if missing
 --   2. Adds missing columns to entreprises, admin_profiles, users
---   3. Sets up RLS policies for anon inserts + auth reads
+--   3. Sets up secure RLS policies for authenticated reads (no anon inserts)
 --   4. Creates provision_enterprise_admin RPC function
 --
 -- Tables touched: entreprises, users, admin_profiles
--- Existing data: NOT affected (ADD COLUMN IF NOT EXISTS)
+-- Existing data: NOT affected (ADD COLUMN IF NOT EXISTS, RLS policies are for new access)
 -- ============================================================
