@@ -54,8 +54,8 @@ export function Navbar() {
 
                 <div className="hidden md:flex items-center gap-4">
                     <ThemeToggle />
-                    <Button variant="ghost" size="sm" asChild>
-                        <Link to="/login">Login</Link>
+                    <Button variant="outline" size="sm" className="border-2 border-black dark:border-white" asChild>
+                        <a href="https://bpms-pff.vercel.app/login" target="_blank" rel="noopener noreferrer">Login</a>
                     </Button>
                     <Button size="sm" asChild>
                         <a href="#pricing">Get Started</a>
@@ -95,8 +95,8 @@ export function Navbar() {
                                 </a>
                             ))}
                             <hr className="w-full border-accent" />
-                            <Button variant="ghost" className="w-full" asChild>
-                                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>Login</Link>
+                            <Button variant="outline" size="sm" className="w-full border-2 border-black dark:border-white" asChild>
+                                <a href="https://bpms-pff.vercel.app/login" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)}>Login</a>
                             </Button>
                             <Button className="w-full" asChild>
                                 <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>Get Started</a>

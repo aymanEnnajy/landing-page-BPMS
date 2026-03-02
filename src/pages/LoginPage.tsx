@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { Link } from "react-router-dom";
+import { supabaseDb2 } from "../lib/supabase_db2";
 import { FormInput } from "../components/signup/FormComponents";
 
+const SAAS_APP_URL = "https://bpms-pff.vercel.app/login";
+
 export default function LoginPage() {
-    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -27,20 +28,25 @@ export default function LoginPage() {
         setError(null);
 
         try {
-            const { error: authError } = await supabase.auth.signInWithPassword({
+            // Authenticate against DB2 (SaaS Application Database)
+            const { error: authError } = await supabaseDb2.auth.signInWithPassword({
                 email: formData.email,
-                password: formData.password
+                password: formData.password,
             });
 
             if (authError) {
-                // Provide a friendlier message for unconfirmed email
                 if (authError.message.toLowerCase().includes("email not confirmed")) {
-                    throw new Error("Please confirm your email first. Check your inbox for the confirmation link we sent.");
+                    throw new Error("Please confirm your email first. Check your inbox for the confirmation link.");
+                }
+                if (authError.message.toLowerCase().includes("invalid login")) {
+                    throw new Error("Invalid email or password. Please try again.");
                 }
                 throw authError;
             }
 
-            navigate('/');
+            // ✅ Credentials are valid — redirect to the SaaS app
+            window.location.href = SAAS_APP_URL;
+
         } catch (err: any) {
             setError(err.message || "Invalid login credentials");
         } finally {
