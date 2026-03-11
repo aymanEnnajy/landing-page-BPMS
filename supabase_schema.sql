@@ -63,7 +63,7 @@ create policy "Allow anon insert on owners"
 
 create table if not exists public.companies (
     id uuid primary key default uuid_generate_v4(),
-    owner_id uuid not null,  -- owner UUID, no FK to avoid anon permission conflicts
+    owner_id uuid unique not null,  -- owner UUID, no FK to avoid anon permission conflicts
     company_name text not null,
     legal_form text,
     ice text,
@@ -79,6 +79,11 @@ create table if not exists public.companies (
     logo_url text,
     created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- Ensure unique constraint exists even if table was already created
+do $$ begin
+    alter table public.companies add constraint companies_owner_id_key unique (owner_id);
+exception when others then null; end $$;
 
 alter table public.companies enable row level security;
 
@@ -251,11 +256,18 @@ declare
     v_company_id  uuid;
     v_payment_id  uuid;
 begin
-    -- 1. Insert owner
+    -- 1. Insert/Update owner based on EMAIL (the most stable unique field)
     insert into public.owners (id, first_name, last_name, email, phone, address, profile_photo_url, role)
-    values (p_user_id, p_first_name, p_last_name, p_email, p_phone, p_address, p_profile_photo, 'owner');
+    values (p_user_id, p_first_name, p_last_name, p_email, p_phone, p_address, p_profile_photo, 'owner')
+    on conflict (email) do update set
+        id = excluded.id,  -- If auth ID changed, update it
+        first_name = excluded.first_name,
+        last_name = excluded.last_name,
+        phone = excluded.phone,
+        address = excluded.address,
+        profile_photo_url = excluded.profile_photo_url;
 
-    -- 2. Insert company
+    -- 2. Insert/Update company based on OWNER_ID
     insert into public.companies (
         owner_id, company_name, legal_form, ice, rc, if_number,
         cnss, patente, company_email, company_phone, address, city, logo_url
@@ -264,6 +276,19 @@ begin
         p_user_id, p_company_name, p_legal_form, p_ice, p_rc, p_if_number,
         p_cnss, p_patente, p_company_email, p_company_phone, p_company_address, p_city, p_logo_url
     )
+    on conflict (owner_id) do update set
+        company_name = excluded.company_name,
+        legal_form = excluded.legal_form,
+        ice = excluded.ice,
+        rc = excluded.rc,
+        if_number = excluded.if_number,
+        cnss = excluded.cnss,
+        patente = excluded.patente,
+        company_email = excluded.company_email,
+        company_phone = excluded.company_phone,
+        address = excluded.address,
+        city = excluded.city,
+        logo_url = excluded.logo_url
     returning id into v_company_id;
 
     -- 3. Insert payment (only if card data provided)

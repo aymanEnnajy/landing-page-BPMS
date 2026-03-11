@@ -26,9 +26,48 @@ DO $$ BEGIN
 EXCEPTION WHEN others THEN NULL; END $$;
 
 -- ============================================================
--- STEP 2: Add missing columns to `entreprises` table
---         (fields from DB1 `companies` that are not in DB2)
+-- STEP 1.1: Fix and Make handle_new_user trigger Idempotent
+--           (This solves "Database error saving new user" by 
+--            allowing the trigger to handle existing records)
 -- ============================================================
+CREATE OR REPLACE FUNCTION public.handle_new_user() 
+RETURNS trigger 
+LANGUAGE plpgsql 
+SECURITY DEFINER 
+SET search_path = public, extensions
+AS $$
+BEGIN
+  -- Insert into public.users only if not already there
+  INSERT INTO public.users (id, entreprise_id, name, email, role, status, avatar_initials)
+  VALUES (
+    NEW.id,
+    '11111111-0001-0001-0001-000000000001',
+    COALESCE(NEW.raw_user_meta_data->>'name', NEW.email),
+    NEW.email,
+    COALESCE((NEW.raw_user_meta_data->>'role')::user_role, 'EMPLOYEE'::user_role),
+    'active'::user_status,
+    UPPER(LEFT(COALESCE(NEW.raw_user_meta_data->>'name', NEW.email), 2))
+  )
+  ON CONFLICT (id) DO NOTHING;
+
+  -- Insert into public.user_details only if not already there
+  INSERT INTO public.user_details (id_user, entreprise_id)
+  VALUES (NEW.id, '11111111-0001-0001-0001-000000000001')
+  ON CONFLICT (id_user) DO NOTHING;
+
+  RETURN NEW;
+END;
+$$;
+
+-- ============================================================
+-- STEP 2: Ensure Default Entreprise exists (Required by handle_new_user trigger)
+-- ============================================================
+INSERT INTO public.entreprises (id, name, status, plan, created_at, updated_at)
+VALUES ('11111111-0001-0001-0001-000000000001', 'Default Enterprise', 'active', 'Starter', now(), now())
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================
+-- STEP 3: Add missing columns to `entreprises` table
 ALTER TABLE public.entreprises
   ADD COLUMN IF NOT EXISTS legal_form  text,
   ADD COLUMN IF NOT EXISTS ice         text,
@@ -40,7 +79,7 @@ ALTER TABLE public.entreprises
   ADD COLUMN IF NOT EXISTS logo_url    text;
 
 -- ============================================================
--- STEP 3: Add auth & profile columns to `admin_profiles`
+-- STEP 4: Add auth & profile columns to `admin_profiles`
 -- ============================================================
 ALTER TABLE public.admin_profiles
   ADD COLUMN IF NOT EXISTS first_name     text,
@@ -50,13 +89,13 @@ ALTER TABLE public.admin_profiles
   ADD COLUMN IF NOT EXISTS auth_user_id   uuid;
 
 -- ============================================================
--- STEP 4: Add password_hash to `users` table
+-- STEP 5: Add password_hash to `users` table
 -- ============================================================
 ALTER TABLE public.users
   ADD COLUMN IF NOT EXISTS password_hash  text;
 
 -- ============================================================
--- STEP 5: RE-ENABLE SECURE RLS POLICIES
+-- STEP 6: RE-ENABLE SECURE RLS POLICIES
 -- ============================================================
 ALTER TABLE public.entreprises   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users         ENABLE ROW LEVEL SECURITY;
@@ -87,16 +126,21 @@ CREATE POLICY "Admins can view their entreprise"
 -- All anonymous signups MUST go through the SECURITY DEFINER function below.
 
 -- ============================================================
--- STEP 6: SECURITY DEFINER function: provision_enterprise_admin
--- This function runs as the database owner (bypassing RLS safely)
--- It ensures all 3 tables are written simultaneously during signup.
+-- STEP 7: SECURITY DEFINER function: provision_enterprise_admin
 -- ============================================================
 
 -- Drop the OLD version if it exists (any signature)
+-- Drop the OLD version if it exists (for any previous changes)
 DROP FUNCTION IF EXISTS public.provision_enterprise_admin(
   uuid, text, text, text, text, text,
   text, text, text, text, text, text, text, text, text,
   text, text, text, text, text
+);
+
+DROP FUNCTION IF EXISTS public.provision_enterprise_admin(
+  uuid, text, text, text, text, text,
+  text, text, text, text, text, text, text, text, text,
+  text, text, text, text, text, text
 );
 
 CREATE OR REPLACE FUNCTION public.provision_enterprise_admin(
@@ -115,6 +159,7 @@ CREATE OR REPLACE FUNCTION public.provision_enterprise_admin(
   p_patente        text,
   p_country        text,
   p_logo_url       text,
+  p_profile_photo  text,     -- NEW: Admin profile photo
   p_first_name     text,     -- admin first name
   p_last_name      text,     -- admin last name
   p_user_email     text,     -- admin email (same as owner)
@@ -124,12 +169,16 @@ CREATE OR REPLACE FUNCTION public.provision_enterprise_admin(
 RETURNS json
 LANGUAGE plpgsql
 SECURITY DEFINER   -- CRITICAL: Runs as admin, bypassing RLS for inserts
-SET search_path = public
+SET search_path = public, extensions
 AS $$
 DECLARE
   v_entreprise_id uuid;
   v_user_id       uuid;
+  v_hashed_password text;
 BEGIN
+  -- 0. Hash the password using the same salt method found in DB2 backup
+  v_hashed_password := extensions.crypt(p_password_hash, extensions.gen_salt('bf'));
+
   -- ── 1. Insert into entreprises ─────────────────────────────
   INSERT INTO public.entreprises (
     name, industry, phone, email, location, status, plan,
@@ -157,11 +206,12 @@ BEGIN
   )
   RETURNING id INTO v_entreprise_id;
 
-  -- ── 2. Insert into users ───────────────────────────────────
-  -- id = auth.users.id → clean 1:1 link, no extra join needed
+  -- ── 2. Upsert into users ───────────────────────────────────
+  -- NOTE: auth.signUp triggers handle_new_user which creates a record.
+  -- We use ON CONFLICT to update that record with the correct enterprise_id and hashed password.
   INSERT INTO public.users (
     id, entreprise_id, name, email, role, status,
-    avatar_initials, password_hash, created_at, updated_at
+    avatar_initials, profile_image_url, password_hash, created_at, updated_at
   )
   VALUES (
     p_auth_user_id,
@@ -171,13 +221,23 @@ BEGIN
     'admin'::user_role,
     'active'::user_status,
     p_avatar_initials,
-    p_password_hash,
+    p_profile_photo,
+    v_hashed_password,
     now(),
     now()
   )
+  ON CONFLICT (id) DO UPDATE SET
+    entreprise_id   = EXCLUDED.entreprise_id,
+    name            = EXCLUDED.name,
+    role            = EXCLUDED.role,
+    status          = EXCLUDED.status,
+    avatar_initials = EXCLUDED.avatar_initials,
+    profile_image_url = EXCLUDED.profile_image_url,
+    password_hash   = EXCLUDED.password_hash,
+    updated_at      = NOW()
   RETURNING id INTO v_user_id;
 
-  -- ── 3. Insert into admin_profiles ─────────────────────────
+  -- ── 3. Upsert into admin_profiles ─────────────────────────
   INSERT INTO public.admin_profiles (
     user_id, first_name, last_name, email,
     password_hash, auth_user_id, created_at
@@ -187,10 +247,16 @@ BEGIN
     p_first_name,
     p_last_name,
     p_user_email,
-    p_password_hash,
+    v_hashed_password,
     p_auth_user_id,
     now()
-  );
+  )
+  ON CONFLICT (user_id) DO UPDATE SET
+    first_name    = EXCLUDED.first_name,
+    last_name     = EXCLUDED.last_name,
+    email         = EXCLUDED.email,
+    password_hash = EXCLUDED.password_hash,
+    auth_user_id  = EXCLUDED.auth_user_id;
 
   -- Return the IDs so the frontend can confirm success
   RETURN json_build_object(
@@ -209,14 +275,14 @@ $$;
 GRANT EXECUTE ON FUNCTION public.provision_enterprise_admin(
   uuid, text, text, text, text, text,
   text, text, text, text, text, text, text, text, text,
-  text, text, text, text, text
+  text, text, text, text, text, text
 ) TO anon;
 
 -- Grant execution rights to authenticated users
 GRANT EXECUTE ON FUNCTION public.provision_enterprise_admin(
   uuid, text, text, text, text, text,
   text, text, text, text, text, text, text, text, text,
-  text, text, text, text, text
+  text, text, text, text, text, text
 ) TO authenticated;
 
 -- ============================================================

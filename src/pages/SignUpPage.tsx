@@ -94,7 +94,9 @@ export default function SignUpPage() {
         setLoading(true);
         setError(null);
 
+        let currentStep = "PREPARING";
         try {
+            currentStep = "DB1_AUTH";
             // ── 1. Auth Sign Up in DB1 ───────────────────────
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: formData.email,
@@ -107,25 +109,32 @@ export default function SignUpPage() {
                 },
             });
 
-            if (authError) throw authError;
-            if (!authData.user) throw new Error("Account creation failed — no user returned");
-
-            const userId = authData.user.id;
+            if (authError) throw new Error(`[DB1 Auth] ${authError.message}`);
+            const userId = authData?.user?.id;
+            if (!userId) throw new Error("[DB1 Auth] Account creation failed — no user returned");
 
             // ── 2. Convert images to base64 ──────────────────
+            currentStep = "IMAGE_CONVERSION";
             let profilePhotoUrl: string | null = null;
             if (formData.profilePhoto) {
-                try { profilePhotoUrl = await fileToBase64(formData.profilePhoto); }
+                try {
+                    profilePhotoUrl = await fileToBase64(formData.profilePhoto);
+                    console.log(`Profile photo base64 length: ${profilePhotoUrl.length}`);
+                }
                 catch (e) { console.warn("Profile photo conversion failed:", e); }
             }
 
             let logoUrl: string | null = null;
             if (formData.companyLogo) {
-                try { logoUrl = await fileToBase64(formData.companyLogo); }
+                try {
+                    logoUrl = await fileToBase64(formData.companyLogo);
+                    console.log(`Company logo base64 length: ${logoUrl.length}`);
+                }
                 catch (e) { console.warn("Logo conversion failed:", e); }
             }
 
             // ── 3. Read payment + plan from localStorage ─────
+            currentStep = "PLAN_READING";
             const pendingPayment = (() => {
                 try { return JSON.parse(localStorage.getItem("pending_payment") || "null"); } catch { return null; }
             })();
@@ -140,6 +149,7 @@ export default function SignUpPage() {
             }
 
             // ── 4. Write to DB1: RPC call ────────────────────
+            currentStep = "DB1_RPC";
             const { error: rpcError } = await supabase.rpc("register_owner_and_company", {
                 // Owner
                 p_user_id: userId,
@@ -179,9 +189,10 @@ export default function SignUpPage() {
                 p_end_date: plan ? endDate.toISOString().split("T")[0] : null,
             });
 
-            if (rpcError) throw new Error(`DB1 Error: ${rpcError.message}`);
+            if (rpcError) throw new Error(`[DB1 RPC] ${rpcError.message}`);
 
             // ── 5. Write to DB2: Create Auth Account ─────────
+            currentStep = "DB2_AUTH";
             console.log("── DB2 Step 5: Creating auth account...");
             const { data: db2AuthData, error: db2AuthError } = await supabaseDb2.auth.signUp({
                 email: formData.email,
@@ -196,10 +207,11 @@ export default function SignUpPage() {
             });
 
             console.log("DB2 Auth Result:", { db2AuthData, db2AuthError });
-            if (db2AuthError) throw new Error(`DB2 Auth Error: ${db2AuthError.message}`);
-            if (!db2AuthData.user) throw new Error("DB2 account creation failed — no user returned");
+            if (db2AuthError) throw new Error(`[DB2 Auth] ${db2AuthError.message}`);
+            if (!db2AuthData.user) throw new Error("[DB2 Auth] Account creation failed — no user returned");
+
             if (db2AuthData.user.identities && db2AuthData.user.identities.length === 0) {
-                throw new Error("DB2 Auth Error: This email is already registered in DB2. Delete the user from DB2 Authentication → Users first.");
+                throw new Error("[DB2 Auth] Email already registered. Please delete user from DB2 Auth before retrying.");
             }
 
             const db2AuthUserId = db2AuthData.user.id;
@@ -221,12 +233,11 @@ export default function SignUpPage() {
             console.log("DB2 Plan mapped:", plan?.plan_name, "→", db2Plan);
 
             // ── 6. Write to DB2: Provision Enterprise + Admin (SECURE RPC) ─
+            currentStep = "DB2_RPC";
             console.log("── DB2 Step 6: Calling secure provision_enterprise_admin RPC...");
 
-            // Single RPC call that atomically inserts Data safely using SECURITY DEFINER
             const { data: db2RpcData, error: db2RpcError } = await supabaseDb2.rpc("provision_enterprise_admin", {
                 p_auth_user_id: db2AuthUserId,
-                // Entreprise fields
                 p_name: formData.companyName,
                 p_industry: formData.legalForm || null,
                 p_phone: formData.companyPhone || null,
@@ -241,7 +252,7 @@ export default function SignUpPage() {
                 p_patente: formData.patente || null,
                 p_country: "Morocco",
                 p_logo_url: logoUrl,
-                // Admin user fields
+                p_profile_photo: profilePhotoUrl,
                 p_first_name: formData.firstName,
                 p_last_name: formData.lastName,
                 p_user_email: formData.email,
@@ -250,20 +261,38 @@ export default function SignUpPage() {
             });
 
             console.log("DB2 RPC Result:", { db2RpcData, db2RpcError });
-            if (db2RpcError) throw new Error(`DB2 Security Error: ${db2RpcError.message}`);
+            if (db2RpcError) throw new Error(`[DB2 RPC] ${db2RpcError.message}`);
             console.log("✅ DB2 Secure Provisioning Complete");
 
             // ── 7. Clean up localStorage ─────────────────────
+            currentStep = "CLEANUP";
             localStorage.removeItem("pending_payment");
             localStorage.removeItem("selected_plan");
 
-            // ── 8. Success → redirect to login ───────────────
+            // ── 8. Success → redirect to external login ──────
             setSuccess(true);
-            setTimeout(() => navigate("/login"), 4000);
+            setTimeout(() => {
+                window.location.href = "https://bpms-pff.vercel.app/login";
+            }, 4000);
 
         } catch (err: any) {
-            console.error("Registration Error:", err);
-            setError(err.message || "An error occurred during registration");
+            console.error("─── REGISTRATION FAILURE ───");
+            console.error("Step:", currentStep);
+            console.error("Context:", err);
+
+            let detailedError = err.message || "An unknown error occurred";
+
+            // Helpful hints for common Supabase errors
+            if (detailedError.includes("Database error saving new user")) {
+                const dbName = currentStep.startsWith("DB2") ? "SaaS Database (DB2)" : "Landing Page Database (DB1)";
+                detailedError = `[Database Trigger Error @ ${currentStep}] ${detailedError}. 
+                This means a trigger in ${dbName} failed. 
+                Common causes: BASE64 image too large for 'text' column, or a missing 'NOT NULL' field.`;
+            } else {
+                detailedError = `[Failed at ${currentStep}] ${detailedError}`;
+            }
+
+            setError(detailedError);
         } finally {
             setLoading(false);
         }
@@ -384,7 +413,7 @@ export default function SignUpPage() {
                         )}
 
                         <p className="text-center mt-5 text-[8px] text-muted-foreground uppercase tracking-[0.2em] font-medium">
-                            Already registered? <Link to="/login" className="text-primary font-black hover:underline ml-1">Log In</Link>
+                            Already registered? <a href="https://bpms-pff.vercel.app/login" className="text-primary font-black hover:underline ml-1">Log In</a>
                         </p>
                     </div>
                 </div>
