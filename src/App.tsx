@@ -8,6 +8,7 @@ import { Solution } from './sections/Solution'
 import { TechnicalProof } from './sections/TechnicalProof'
 import { Pricing } from './sections/Pricing'
 import { CTA } from './sections/CTA'
+import { DownloadApp } from './sections/DownloadApp'
 import PaymentPage from './pages/PaymentPage'
 import SignUpPage from './pages/SignUpPage'
 import LoginPage from './pages/LoginPage'
@@ -23,6 +24,7 @@ function HomePage() {
         <TechnicalProof />
         <CTA />
         <Pricing />
+        <DownloadApp />
       </main>
       <Footer />
     </>
